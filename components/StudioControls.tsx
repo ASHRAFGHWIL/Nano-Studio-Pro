@@ -67,8 +67,13 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
   currentImage
 }) => {
   const [prompt, setPrompt] = useState('');
-  const [exportFormat, setExportFormat] = useState<'png' | 'jpeg'>('png');
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpeg' | 'webp'>('png');
   const [exportScale, setExportScale] = useState<number>(1);
+  
+  // State for dropdowns to act as controlled inputs (resettable)
+  const [selectedPreset, setSelectedPreset] = useState('');
+  const [selectedCamera, setSelectedCamera] = useState('');
+  const [selectedScene, setSelectedScene] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +86,19 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
     setPrompt(newPrompt);
   };
 
+  const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>, type: 'preset' | 'camera' | 'scene') => {
+    const value = e.target.value;
+    if (!value) return;
+
+    handlePromptSet(value);
+    
+    // Reset other dropdowns visually to avoid confusion, or keep them. 
+    // Here we just update the specific one.
+    if (type === 'preset') setSelectedPreset(value);
+    if (type === 'camera') setSelectedCamera(value);
+    if (type === 'scene') setSelectedScene(value);
+  };
+
   const handleDownload = () => {
     if (currentImage) {
       const filename = `nano-studio-${new Date().toISOString().slice(0,10)}`;
@@ -88,14 +106,26 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
     }
   };
 
+  // Helper styles for Select
+  const selectClass = "w-full bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block p-2.5 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  
+  // Custom Chevron Icon for Select
+  const ChevronIcon = () => (
+    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-zinc-400">
+      <svg className="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
+      </svg>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800 w-full lg:w-96 p-6 overflow-y-auto">
+    <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800 w-full lg:w-96 p-6 overflow-y-auto custom-scrollbar">
       <div className="mb-8">
         <h2 className="serif text-2xl font-bold text-white mb-1">نانو ستوديو</h2>
         <p className="text-zinc-500 text-sm">مدعوم بواسطة Gemini 2.5</p>
       </div>
 
-      <div className="space-y-8 flex-1">
+      <div className="space-y-6 flex-1">
         {/* Prompt Input */}
         <div>
           <label htmlFor="prompt" className="block text-sm font-medium text-zinc-300 mb-2">
@@ -122,45 +152,53 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
           {isProcessing ? 'جاري المعالجة...' : 'إنشاء اللقطة'}
         </Button>
 
-        {/* Camera Moves Section */}
+        <hr className="border-zinc-800" />
+
+        {/* Camera Moves Dropdown */}
         <div>
-          <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+          <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-2">
             حركة الكاميرا
           </label>
-          <div className="grid grid-cols-2 gap-2">
-            {CAMERA_MOVES.map((move) => (
-              <button
-                key={move.id}
-                onClick={() => handlePromptSet(move.prompt)}
-                disabled={!hasImage || isProcessing}
-                className="flex items-center gap-2 px-3 py-2 bg-zinc-800/30 hover:bg-zinc-800 rounded-lg border border-zinc-800/50 hover:border-zinc-700 transition-all text-right group disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="text-lg group-hover:scale-110 transition-transform">{move.icon}</span>
-                <span className="text-zinc-300 font-medium text-xs group-hover:text-white">{move.name}</span>
-              </button>
-            ))}
+          <div className="relative">
+            <select
+              value={selectedCamera}
+              onChange={(e) => handleDropdownChange(e, 'camera')}
+              disabled={!hasImage || isProcessing}
+              className={selectClass}
+              dir="rtl"
+            >
+              <option value="">اختر حركة للكاميرا...</option>
+              {CAMERA_MOVES.map((move) => (
+                <option key={move.id} value={move.prompt}>
+                  {move.icon} {move.name}
+                </option>
+              ))}
+            </select>
+            <ChevronIcon />
           </div>
         </div>
 
-        {/* Presets */}
+        {/* Presets Dropdown */}
         <div>
-          <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+          <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-2">
             أنماط جاهزة
           </label>
-          <div className="grid grid-cols-1 gap-2">
-            {PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => handlePromptSet(preset.prompt)}
-                disabled={!hasImage || isProcessing}
-                className="flex items-center gap-3 px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg border border-zinc-800/50 hover:border-zinc-700 transition-all text-right group disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="text-xl group-hover:scale-110 transition-transform">{preset.icon}</span>
-                <div>
-                  <div className="text-zinc-300 font-medium text-sm group-hover:text-white">{preset.name}</div>
-                </div>
-              </button>
-            ))}
+          <div className="relative">
+            <select
+              value={selectedPreset}
+              onChange={(e) => handleDropdownChange(e, 'preset')}
+              disabled={!hasImage || isProcessing}
+              className={selectClass}
+              dir="rtl"
+            >
+              <option value="">اختر نمطاً جاهزاً...</option>
+              {PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.prompt}>
+                  {preset.icon} {preset.name}
+                </option>
+              ))}
+            </select>
+            <ChevronIcon />
           </div>
         </div>
 
@@ -170,8 +208,8 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
             تغيير الخلفية
           </label>
           
-          {/* Colors & Gradients */}
-          <div className="flex flex-wrap gap-2 mb-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800/50">
+          {/* Colors & Gradients (Keep as visual palette) */}
+          <div className="flex flex-wrap gap-2 mb-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800/50 justify-end">
             {SOLID_COLORS.map(c => (
               <button 
                 key={c.name}
@@ -194,18 +232,23 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
             ))}
           </div>
 
-          {/* Scenes */}
-          <div className="grid grid-cols-2 gap-2">
-            {SCENES.map(scene => (
-              <button
-                key={scene.id}
-                onClick={() => handlePromptSet(scene.prompt)}
-                disabled={!hasImage || isProcessing}
-                className="px-3 py-2 bg-zinc-800/30 border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all text-center disabled:opacity-50"
-              >
-                {scene.name}
-              </button>
-            ))}
+          {/* Scenes Dropdown */}
+          <div className="relative">
+            <select
+              value={selectedScene}
+              onChange={(e) => handleDropdownChange(e, 'scene')}
+              disabled={!hasImage || isProcessing}
+              className={selectClass}
+              dir="rtl"
+            >
+              <option value="">اختر مشهداً...</option>
+              {SCENES.map((scene) => (
+                <option key={scene.id} value={scene.prompt}>
+                  🏞️ {scene.name}
+                </option>
+              ))}
+            </select>
+            <ChevronIcon />
           </div>
         </div>
 
@@ -233,6 +276,12 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
                >
                  JPG
                </button>
+               <button 
+                 onClick={() => setExportFormat('webp')}
+                 className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportFormat === 'webp' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 WEBP
+               </button>
             </div>
 
             {/* Scale Selection */}
@@ -242,6 +291,12 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
                  className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportScale === 1 ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                >
                  أصلية
+               </button>
+               <button 
+                 onClick={() => setExportScale(0.75)}
+                 className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportScale === 0.75 ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 75%
                </button>
                <button 
                  onClick={() => setExportScale(0.5)}

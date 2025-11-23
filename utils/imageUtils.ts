@@ -1,7 +1,7 @@
 export const downloadImage = (
   base64Data: string,
   filename: string,
-  format: 'png' | 'jpeg',
+  format: 'png' | 'jpeg' | 'webp',
   scale: number
 ) => {
   const img = new Image();
@@ -28,8 +28,16 @@ export const downloadImage = (
     
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     
-    const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-    const quality = format === 'jpeg' ? 0.92 : 1.0;
+    let mimeType = 'image/png';
+    let quality = 1.0;
+
+    if (format === 'jpeg') {
+      mimeType = 'image/jpeg';
+      quality = 0.92;
+    } else if (format === 'webp') {
+      mimeType = 'image/webp';
+      quality = 0.92;
+    }
     
     const dataURI = canvas.toDataURL(mimeType, quality);
     
