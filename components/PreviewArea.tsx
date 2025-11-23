@@ -13,8 +13,8 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
   isProcessing,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isComparing, setIsComparing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [sliderPosition, setSliderPosition] = useState(50);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,7 +50,12 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
     }
   };
 
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSliderPosition(Number(e.target.value));
+  };
+
   const hasImage = !!imageState.current;
+  const isModified = imageState.original && imageState.current && imageState.original !== imageState.current;
 
   // Render Empty State
   if (!hasImage) {
@@ -97,60 +102,88 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
 
   // Render Image Preview
   return (
-    <div className="flex-1 bg-zinc-950 relative flex items-center justify-center p-4 lg:p-12 overflow-hidden">
+    <div className="flex-1 bg-zinc-950 relative flex items-center justify-center p-4 lg:p-12 overflow-hidden select-none">
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 opacity-5" 
            style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
       </div>
 
-      <div className="relative max-w-full max-h-full shadow-2xl shadow-black rounded-lg overflow-hidden ring-1 ring-white/10 transition-all duration-500">
-        <img 
-          key={imageState.current} // Triggers animation when image content updates
-          src={isComparing && imageState.original ? imageState.original : imageState.current!} 
-          alt="Studio content" 
-          className={`max-w-full max-h-[85vh] object-contain transition-all duration-500 ease-out ${
-            isProcessing 
-              ? 'opacity-50 blur-sm scale-[0.99]' 
-              : 'opacity-100 animate-reveal'
-          }`}
-        />
-        
-        {/* Processing Overlay */}
-        {isProcessing && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/20 backdrop-blur-[2px] animate-fade-in">
-            <div className="relative w-24 h-24">
-               <div className="absolute inset-0 border-4 border-zinc-700 rounded-full"></div>
-               <div className="absolute inset-0 border-4 border-yellow-500 rounded-full border-t-transparent animate-spin"></div>
-            </div>
-            <p className="mt-4 text-yellow-500 font-medium tracking-widest uppercase text-sm animate-pulse">جاري المعالجة</p>
-          </div>
-        )}
+      <div className="relative max-w-full max-h-full w-full h-full flex items-center justify-center">
+        <div className="relative shadow-2xl shadow-black rounded-lg overflow-hidden ring-1 ring-white/10 transition-all duration-500 max-h-[85vh] max-w-full">
+          
+          {/* Base Image (Edited/Current) - Shown on the LEFT in RTL split */}
+          <img 
+            src={imageState.current!} 
+            alt="Edited content" 
+            className={`max-w-full max-h-[85vh] object-contain transition-all duration-500 ease-out ${
+              isProcessing 
+                ? 'opacity-50 blur-sm scale-[0.99]' 
+                : 'opacity-100 animate-reveal'
+            }`}
+          />
 
-        {/* Compare Button Badge - Left in RTL */}
-        {!isProcessing && imageState.original && imageState.current !== imageState.original && (
-          <div className="absolute bottom-6 left-6 z-10 animate-fade-in">
-            <button
-              onMouseDown={() => setIsComparing(true)}
-              onMouseUp={() => setIsComparing(false)}
-              onMouseLeave={() => setIsComparing(false)}
-              onTouchStart={() => setIsComparing(true)}
-              onTouchEnd={() => setIsComparing(false)}
-              className="bg-black/70 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full border border-white/10 hover:bg-black/90 transition-colors select-none"
+          {/* Overlay Image (Original) - Shown on the RIGHT in RTL split */}
+          {isModified && !isProcessing && (
+            <div 
+              className="absolute inset-0 w-full h-full"
+              style={{ 
+                clipPath: `inset(0 0 0 ${sliderPosition}%)` // Clips from the left, revealing the right side (Original)
+              }}
             >
-              اضغط للمقارنة
-            </button>
-          </div>
-        )}
-      </div>
+              <img 
+                src={imageState.original!} 
+                alt="Original content" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          )}
 
-      {/* Info Tag - Right in RTL */}
-      {!isProcessing && (
-        <div className="absolute top-6 right-6 pointer-events-none animate-fade-in">
-             <div className="bg-zinc-900/80 backdrop-blur border border-zinc-700 px-3 py-1 rounded text-xs text-zinc-400 font-mono">
-                {isComparing ? 'الأصلية' : 'المعدلة'}
-             </div>
+          {/* Slider Controls */}
+          {isModified && !isProcessing && (
+            <>
+              {/* Vertical Divider Line */}
+              <div 
+                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_10px_rgba(0,0,0,0.5)] z-20 pointer-events-none"
+                style={{ left: `${sliderPosition}%` }}
+              >
+                {/* Handle Circle */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-zinc-900">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" transform="rotate(90 12 12)" /></svg>
+                </div>
+              </div>
+
+              {/* Labels */}
+              <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur text-white text-xs px-2 py-1 rounded border border-white/10 font-bold pointer-events-none transition-opacity duration-300" style={{ opacity: sliderPosition < 10 ? 0 : 1 }}>
+                أصلية
+              </div>
+              <div className="absolute top-4 left-4 z-10 bg-yellow-500/80 backdrop-blur text-white text-xs px-2 py-1 rounded border border-white/10 font-bold pointer-events-none transition-opacity duration-300" style={{ opacity: sliderPosition > 90 ? 0 : 1 }}>
+                معدلة
+              </div>
+
+              {/* Range Input for Interaction */}
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sliderPosition}
+                onChange={handleSliderChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-30"
+              />
+            </>
+          )}
+          
+          {/* Processing Overlay */}
+          {isProcessing && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/20 backdrop-blur-[2px] animate-fade-in">
+              <div className="relative w-24 h-24">
+                 <div className="absolute inset-0 border-4 border-zinc-700 rounded-full"></div>
+                 <div className="absolute inset-0 border-4 border-yellow-500 rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <p className="mt-4 text-yellow-500 font-medium tracking-widest uppercase text-sm animate-pulse">جاري المعالجة</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

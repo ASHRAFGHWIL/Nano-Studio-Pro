@@ -18,10 +18,23 @@ const PRESETS: Preset[] = [
   { id: 'nature', name: 'مشهد طبيعي', prompt: 'Place the object on a mossy rock in a forest, dappled sunlight, bokeh background', icon: '🌿' },
   { id: 'luxury', name: 'فخامة ذهبية', prompt: 'Add gold accents, luxurious marble background, warm ambient lighting', icon: '✨' },
   { id: 'industrial', name: 'صناعي خام', prompt: 'Place object on raw concrete surface, brutalist architecture, industrial lighting, sharp shadows', icon: '🏗️' },
-  { id: 'pastel', name: 'ألوان باستيل', prompt: 'Soft pastel color palette background, dreamy lighting, minimal geometric shapes, pop art style', icon: '🎨' },
+  { id: 'pastel', name: 'ألوان باستيل', prompt: 'Change the background to a soft pastel color palette with minimal geometric shapes, in a pop art style', icon: '🎨' },
   { id: 'golden', name: 'غروب دافئ', prompt: 'Golden hour sunlight, warm glow, long soft shadows, outdoor natural atmosphere, lens flare', icon: '🌅' },
   { id: 'monochrome', name: 'أبيض وأسود', prompt: 'High contrast black and white photography, dramatic noir lighting, sharp details, artistic composition', icon: '🎱' },
   { id: 'kitchen', name: 'مطبخ عصري', prompt: 'Place on a clean marble kitchen counter, bright morning light, blurred modern kitchen background, lifestyle', icon: '🍳' },
+  { id: 'minimalist', name: 'مينيمالي نظيف', prompt: 'Place on a white pedestal, minimalist geometric background, high key lighting, soft shadows, architectural style', icon: '🏛️' },
+  { id: 'vintage', name: 'ريترو كلاسيك', prompt: 'Add 70s retro film look, warm faded colors, vintage furniture background, nostalgic atmosphere, grain texture', icon: '🎞️' },
+  { id: 'tech', name: 'تقني حديث', prompt: 'Place on a clean white glossy surface, cool white laboratory lighting, high-tech environment, sleek modern look', icon: '🧪' },
+  { id: 'summer', name: 'أجواء صيفية', prompt: 'Place on sand, bright sunlight, blue sky background, beach atmosphere, refreshing look, hard shadows', icon: '🏖️' },
+  { id: 'darkmode', name: 'دارك مود', prompt: 'Place on a matte black surface, dark grey background, sleek dim lighting, modern tech aesthetic', icon: '🌑' },
+];
+
+const CAMERA_MOVES = [
+  { id: 'dolly_in', name: 'تقريب (Dolly In)', prompt: 'Zoom in slightly on the subject, maintaining high detail and lighting', icon: '🔍+' },
+  { id: 'dolly_out', name: 'تبعيد (Dolly Out)', prompt: 'Zoom out slightly to reveal more surroundings, maintaining consistency', icon: '🔍-' },
+  { id: 'low_angle', name: 'زاوية منخفضة', prompt: 'Change to a low camera angle looking up at the subject, dramatic view', icon: '📐' },
+  { id: 'high_angle', name: 'زاوية مرتفعة', prompt: 'Change to a high camera angle looking down at the subject, overview', icon: '📏' },
+  { id: 'dutch', name: 'إمالة (Dutch)', prompt: 'Add a dutch angle tilt for a dynamic, energetic look', icon: '🔄' },
 ];
 
 const SOLID_COLORS = [
@@ -108,6 +121,26 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
         >
           {isProcessing ? 'جاري المعالجة...' : 'إنشاء اللقطة'}
         </Button>
+
+        {/* Camera Moves Section */}
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            حركة الكاميرا
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {CAMERA_MOVES.map((move) => (
+              <button
+                key={move.id}
+                onClick={() => handlePromptSet(move.prompt)}
+                disabled={!hasImage || isProcessing}
+                className="flex items-center gap-2 px-3 py-2 bg-zinc-800/30 hover:bg-zinc-800 rounded-lg border border-zinc-800/50 hover:border-zinc-700 transition-all text-right group disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-lg group-hover:scale-110 transition-transform">{move.icon}</span>
+                <span className="text-zinc-300 font-medium text-xs group-hover:text-white">{move.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Presets */}
         <div>
