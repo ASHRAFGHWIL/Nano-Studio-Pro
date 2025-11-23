@@ -13,36 +13,35 @@ const getClient = () => {
  * @param base64Image The base64 string of the image (without the data prefix usually)
  * @param mimeType The mime type of the image (e.g., image/png)
  * @param prompt The user's editing instruction
- * @returns The base64 string of the generated image
+ * @returns Object containing the base64 string of the generated image and its mimeType
  */
 export const editImageWithGemini = async (
   base64Image: string,
   mimeType: string,
   prompt: string
-): Promise<string> => {
+): Promise<{ data: string; mimeType: string }> => {
   const ai = getClient();
   
   // Robust base64 extraction: split by comma to remove data URI scheme if present
-  const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+  // Also remove any whitespace/newlines which can cause invalid argument errors
+  const base64Data = (base64Image.includes(',') ? base64Image.split(',')[1] : base64Image).replace(/\s/g, '');
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image', // Nano Banana
-      contents: [
-        {
-          parts: [
-            {
-              inlineData: {
-                mimeType: mimeType,
-                data: base64Data,
-              },
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data,
             },
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
+          },
+          {
+            text: prompt,
+          },
+        ],
+      },
       // Note: responseMimeType and responseSchema are NOT supported for Nano Banana models
     });
 
@@ -54,10 +53,14 @@ export const editImageWithGemini = async (
     }
 
     let generatedImageBase64: string | null = null;
+    let generatedMimeType: string = 'image/jpeg'; // Default to jpeg if not specified
 
     for (const part of parts) {
       if (part.inlineData && part.inlineData.data) {
         generatedImageBase64 = part.inlineData.data;
+        if (part.inlineData.mimeType) {
+          generatedMimeType = part.inlineData.mimeType;
+        }
         break; 
       }
     }
@@ -71,7 +74,7 @@ export const editImageWithGemini = async (
        throw new Error("Model did not return a valid image.");
     }
 
-    return generatedImageBase64;
+    return { data: generatedImageBase64, mimeType: generatedMimeType };
 
   } catch (error) {
     console.error("Gemini Edit Error:", error);

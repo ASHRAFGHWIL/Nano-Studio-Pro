@@ -56,19 +56,22 @@ const App: React.FC = () => {
 
     try {
       // Use the *current* image as the base for the edit, allowing iterative edits.
-      const generatedImageBase64 = await editImageWithGemini(
+      const result = await editImageWithGemini(
         imageState.current, 
         imageState.mimeType, 
         prompt
       );
 
-      // Re-add prefix if missing (Gemini service cleans it, but UI needs it)
-      const fullBase64 = `data:${imageState.mimeType};base64,${generatedImageBase64}`;
+      // Re-add prefix using the ACTUAL mime type returned by the model
+      // This is crucial because if we send a JPEG (generated) back as a PNG (original mimeType),
+      // the API will throw INVALID_ARGUMENT on the next edit.
+      const fullBase64 = `data:${result.mimeType};base64,${result.data}`;
 
       setImageState(prev => ({
         ...prev,
         current: fullBase64,
-        history: [...prev.history, fullBase64]
+        history: [...prev.history, fullBase64],
+        mimeType: result.mimeType // Update state to reflect the new image's type
       }));
       
       setStatus(StudioStatus.SUCCESS);

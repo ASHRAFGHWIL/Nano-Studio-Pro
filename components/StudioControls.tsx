@@ -17,6 +17,33 @@ const PRESETS: Preset[] = [
   { id: 'cyberpunk', name: 'نيون/سايبر بانك', prompt: 'Add neon lights, cyberpunk aesthetic, pink and blue rim lighting', icon: '🌃' },
   { id: 'nature', name: 'مشهد طبيعي', prompt: 'Place the object on a mossy rock in a forest, dappled sunlight, bokeh background', icon: '🌿' },
   { id: 'luxury', name: 'فخامة ذهبية', prompt: 'Add gold accents, luxurious marble background, warm ambient lighting', icon: '✨' },
+  { id: 'industrial', name: 'صناعي خام', prompt: 'Place object on raw concrete surface, brutalist architecture, industrial lighting, sharp shadows', icon: '🏗️' },
+  { id: 'pastel', name: 'ألوان باستيل', prompt: 'Soft pastel color palette background, dreamy lighting, minimal geometric shapes, pop art style', icon: '🎨' },
+  { id: 'golden', name: 'غروب دافئ', prompt: 'Golden hour sunlight, warm glow, long soft shadows, outdoor natural atmosphere, lens flare', icon: '🌅' },
+  { id: 'monochrome', name: 'أبيض وأسود', prompt: 'High contrast black and white photography, dramatic noir lighting, sharp details, artistic composition', icon: '🎱' },
+  { id: 'kitchen', name: 'مطبخ عصري', prompt: 'Place on a clean marble kitchen counter, bright morning light, blurred modern kitchen background, lifestyle', icon: '🍳' },
+];
+
+const SOLID_COLORS = [
+  { name: 'White', hex: '#FFFFFF', prompt: 'Change background to pure white' },
+  { name: 'Black', hex: '#000000', prompt: 'Change background to pure black' },
+  { name: 'Gray', hex: '#808080', prompt: 'Change background to neutral gray' },
+  { name: 'Red', hex: '#EF4444', prompt: 'Change background to vibrant red' },
+  { name: 'Blue', hex: '#3B82F6', prompt: 'Change background to professional blue' },
+  { name: 'Green', hex: '#10B981', prompt: 'Change background to green screen style' },
+];
+
+const GRADIENTS = [
+  { name: 'Warm', class: 'from-orange-400 to-red-500', prompt: 'Change background to a warm orange to red gradient' },
+  { name: 'Cool', class: 'from-blue-400 to-cyan-500', prompt: 'Change background to a cool blue to cyan gradient' },
+  { name: 'Luxury', class: 'from-slate-900 to-slate-700', prompt: 'Change background to a luxury dark gradient' },
+];
+
+const SCENES = [
+  { id: 'studio', name: 'ستوديو أبيض', prompt: 'Place object on a white infinity curve studio background with soft shadows' },
+  { id: 'desk', name: 'مكتب خشبي', prompt: 'Place object on a clean wooden desk with a blurred office background' },
+  { id: 'marble', name: 'رخام فاخر', prompt: 'Place object on a luxury white marble surface with reflections' },
+  { id: 'nature', name: 'طبيعة ضبابية', prompt: 'Place object in a misty forest floor with shallow depth of field' },
 ];
 
 export const StudioControls: React.FC<StudioControlsProps> = ({ 
@@ -37,8 +64,8 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
     }
   };
 
-  const handlePresetClick = (presetPrompt: string) => {
-    setPrompt(presetPrompt);
+  const handlePromptSet = (newPrompt: string) => {
+    setPrompt(newPrompt);
   };
 
   const handleDownload = () => {
@@ -55,7 +82,7 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
         <p className="text-zinc-500 text-sm">مدعوم بواسطة Gemini 2.5</p>
       </div>
 
-      <div className="space-y-6 flex-1">
+      <div className="space-y-8 flex-1">
         {/* Prompt Input */}
         <div>
           <label htmlFor="prompt" className="block text-sm font-medium text-zinc-300 mb-2">
@@ -63,7 +90,7 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
           </label>
           <textarea
             id="prompt"
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 min-h-[120px] resize-none text-sm leading-relaxed"
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 min-h-[100px] resize-none text-sm leading-relaxed"
             placeholder="صِف رؤيتك... مثال: 'أضف فلتر ريترو' أو 'ضع المنتج على طاولة خشبية'"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -85,13 +112,13 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
         {/* Presets */}
         <div>
           <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
-            إعدادات جاهزة
+            أنماط جاهزة
           </label>
           <div className="grid grid-cols-1 gap-2">
             {PRESETS.map((preset) => (
               <button
                 key={preset.id}
-                onClick={() => handlePresetClick(preset.prompt)}
+                onClick={() => handlePromptSet(preset.prompt)}
                 disabled={!hasImage || isProcessing}
                 className="flex items-center gap-3 px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg border border-zinc-800/50 hover:border-zinc-700 transition-all text-right group disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -103,6 +130,52 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Backgrounds Section */}
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            تغيير الخلفية
+          </label>
+          
+          {/* Colors & Gradients */}
+          <div className="flex flex-wrap gap-2 mb-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800/50">
+            {SOLID_COLORS.map(c => (
+              <button 
+                key={c.name}
+                onClick={() => handlePromptSet(c.prompt)}
+                disabled={!hasImage || isProcessing}
+                className="w-6 h-6 rounded-full border border-zinc-700 hover:scale-125 transition-transform focus:ring-2 ring-yellow-500/50 disabled:opacity-50"
+                style={{ backgroundColor: c.hex }}
+                title={c.name}
+              />
+            ))}
+            <div className="w-px h-6 bg-zinc-700 mx-1"></div>
+            {GRADIENTS.map(g => (
+              <button 
+                key={g.name}
+                onClick={() => handlePromptSet(g.prompt)}
+                disabled={!hasImage || isProcessing}
+                className={`w-6 h-6 rounded-full border border-zinc-700 bg-gradient-to-br ${g.class} hover:scale-125 transition-transform focus:ring-2 ring-yellow-500/50 disabled:opacity-50`}
+                title={g.name}
+              />
+            ))}
+          </div>
+
+          {/* Scenes */}
+          <div className="grid grid-cols-2 gap-2">
+            {SCENES.map(scene => (
+              <button
+                key={scene.id}
+                onClick={() => handlePromptSet(scene.prompt)}
+                disabled={!hasImage || isProcessing}
+                className="px-3 py-2 bg-zinc-800/30 border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all text-center disabled:opacity-50"
+              >
+                {scene.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
       </div>
 
       {/* Export Controls */}

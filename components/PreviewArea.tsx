@@ -66,7 +66,7 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
-          className={`relative z-10 w-full max-w-xl h-96 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-200 group animate-reveal 
+          className={`relative z-10 w-full max-w-xl h-96 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-300 group animate-reveal 
             ${isDragging 
               ? 'border-yellow-500 bg-zinc-900/80 scale-105 shadow-2xl shadow-yellow-500/10' 
               : 'border-zinc-800 hover:border-yellow-500/50 hover:bg-zinc-900/50'
@@ -103,21 +103,21 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
            style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
       </div>
 
-      <div className="relative max-w-full max-h-full shadow-2xl shadow-black rounded-lg overflow-hidden ring-1 ring-white/10">
+      <div className="relative max-w-full max-h-full shadow-2xl shadow-black rounded-lg overflow-hidden ring-1 ring-white/10 transition-all duration-500">
         <img 
           key={imageState.current} // Triggers animation when image content updates
           src={isComparing && imageState.original ? imageState.original : imageState.current!} 
           alt="Studio content" 
-          className={`max-w-full max-h-[85vh] object-contain transition-all duration-300 ${
+          className={`max-w-full max-h-[85vh] object-contain transition-all duration-500 ease-out ${
             isProcessing 
-              ? 'opacity-50 blur-sm scale-[0.98]' 
+              ? 'opacity-50 blur-sm scale-[0.99]' 
               : 'opacity-100 animate-reveal'
           }`}
         />
         
         {/* Processing Overlay */}
         {isProcessing && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/20 backdrop-blur-[2px] animate-fade-in">
             <div className="relative w-24 h-24">
                <div className="absolute inset-0 border-4 border-zinc-700 rounded-full"></div>
                <div className="absolute inset-0 border-4 border-yellow-500 rounded-full border-t-transparent animate-spin"></div>
@@ -128,7 +128,7 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
 
         {/* Compare Button Badge - Left in RTL */}
         {!isProcessing && imageState.original && imageState.current !== imageState.original && (
-          <div className="absolute bottom-6 left-6 z-10">
+          <div className="absolute bottom-6 left-6 z-10 animate-fade-in">
             <button
               onMouseDown={() => setIsComparing(true)}
               onMouseUp={() => setIsComparing(false)}
@@ -145,7 +145,7 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
 
       {/* Info Tag - Right in RTL */}
       {!isProcessing && (
-        <div className="absolute top-6 right-6 pointer-events-none">
+        <div className="absolute top-6 right-6 pointer-events-none animate-fade-in">
              <div className="bg-zinc-900/80 backdrop-blur border border-zinc-700 px-3 py-1 rounded text-xs text-zinc-400 font-mono">
                 {isComparing ? 'الأصلية' : 'المعدلة'}
              </div>
