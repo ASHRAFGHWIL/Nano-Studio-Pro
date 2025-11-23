@@ -17,6 +17,16 @@ const App: React.FC = () => {
 
   const handleImageUpload = (file: File) => {
     setStatus(StudioStatus.UPLOADING);
+    setErrorMsg(null);
+
+    // Validate MIME type
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setErrorMsg("صيغة الملف غير مدعومة. يرجى استخدام PNG, JPG, أو WEBP.");
+      setStatus(StudioStatus.ERROR);
+      return;
+    }
+
     const reader = new FileReader();
     
     reader.onload = (e) => {
@@ -118,6 +128,7 @@ const App: React.FC = () => {
           onReset={handleReset}
           isProcessing={status === StudioStatus.PROCESSING}
           hasImage={!!imageState.current}
+          currentImage={imageState.current}
         />
       </aside>
 

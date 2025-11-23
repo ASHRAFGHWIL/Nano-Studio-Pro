@@ -22,25 +22,27 @@ export const editImageWithGemini = async (
 ): Promise<string> => {
   const ai = getClient();
   
-  // Clean base64 string if it contains headers
-  const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+  // Robust base64 extraction: split by comma to remove data URI scheme if present
+  const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image', // Nano Banana
-      contents: {
-        parts: [
-          {
-            text: prompt,
-          },
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data: cleanBase64,
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                mimeType: mimeType,
+                data: base64Data,
+              },
             },
-          },
-        ],
-      },
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
       // Note: responseMimeType and responseSchema are NOT supported for Nano Banana models
     });
 

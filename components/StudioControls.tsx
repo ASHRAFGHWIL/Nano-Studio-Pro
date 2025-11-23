@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { Preset } from '../types';
+import { downloadImage } from '../utils/imageUtils';
 
 interface StudioControlsProps {
   onGenerate: (prompt: string) => void;
   onReset: () => void;
   isProcessing: boolean;
   hasImage: boolean;
+  currentImage: string | null;
 }
 
 const PRESETS: Preset[] = [
@@ -21,9 +23,12 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
   onGenerate, 
   onReset, 
   isProcessing,
-  hasImage
+  hasImage,
+  currentImage
 }) => {
   const [prompt, setPrompt] = useState('');
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpeg'>('png');
+  const [exportScale, setExportScale] = useState<number>(1);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +39,13 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
 
   const handlePresetClick = (presetPrompt: string) => {
     setPrompt(presetPrompt);
+  };
+
+  const handleDownload = () => {
+    if (currentImage) {
+      const filename = `nano-studio-${new Date().toISOString().slice(0,10)}`;
+      downloadImage(currentImage, filename, exportFormat, exportScale);
+    }
   };
 
   return (
@@ -93,15 +105,67 @@ export const StudioControls: React.FC<StudioControlsProps> = ({
         </div>
       </div>
 
+      {/* Export Controls */}
+      {hasImage && (
+        <div className="mt-8 pt-6 border-t border-zinc-800">
+           <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            تصدير ومشاركة
+          </label>
+          
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Format Selection */}
+            <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+               <button 
+                 onClick={() => setExportFormat('png')}
+                 className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportFormat === 'png' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 PNG
+               </button>
+               <button 
+                 onClick={() => setExportFormat('jpeg')}
+                 className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportFormat === 'jpeg' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 JPG
+               </button>
+            </div>
+
+            {/* Scale Selection */}
+            <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+               <button 
+                 onClick={() => setExportScale(1)}
+                 className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportScale === 1 ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 أصلية
+               </button>
+               <button 
+                 onClick={() => setExportScale(0.5)}
+                 className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${exportScale === 0.5 ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 50%
+               </button>
+            </div>
+          </div>
+
+          <Button 
+            variant="secondary" 
+            onClick={handleDownload} 
+            className="w-full text-sm h-10 border-zinc-700 hover:bg-zinc-800 hover:text-white hover:border-zinc-600"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            حفظ الصورة
+          </Button>
+        </div>
+      )}
+
       {/* Footer Controls */}
-      <div className="mt-8 pt-6 border-t border-zinc-800">
+      <div className="mt-4 pt-4 border-t border-zinc-800">
         <Button 
-          variant="secondary" 
+          variant="ghost" 
           onClick={onReset} 
           disabled={!hasImage || isProcessing}
-          className="w-full"
+          className="w-full text-sm hover:text-red-400"
         >
-          إعادة تعيين الجلسة
+          بدء جلسة جديدة
         </Button>
       </div>
     </div>

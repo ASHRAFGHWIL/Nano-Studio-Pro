@@ -14,6 +14,7 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isComparing, setIsComparing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -24,6 +25,29 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
 
   const triggerUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      // Basic validation for image type
+      if (file.type.startsWith('image/')) {
+        onImageUpload(file);
+      }
+    }
   };
 
   const hasImage = !!imageState.current;
@@ -39,15 +63,26 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
         
         <div 
           onClick={triggerUpload}
-          className="relative z-10 w-full max-w-xl h-96 border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-yellow-500/50 hover:bg-zinc-900/50 transition-all group"
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          className={`relative z-10 w-full max-w-xl h-96 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-200 group animate-reveal 
+            ${isDragging 
+              ? 'border-yellow-500 bg-zinc-900/80 scale-105 shadow-2xl shadow-yellow-500/10' 
+              : 'border-zinc-800 hover:border-yellow-500/50 hover:bg-zinc-900/50'
+            }`}
         >
-          <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-black/50">
-            <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className={`w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 transition-all duration-300 shadow-xl shadow-black/50 pointer-events-none ${isDragging ? 'scale-110' : 'group-hover:scale-110'}`}>
+            <svg className={`w-8 h-8 transition-colors ${isDragging ? 'text-yellow-400' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <h3 className="text-xl font-medium text-white mb-2 font-serif">رفع صورة المنتج</h3>
-          <p className="text-zinc-500 text-center max-w-xs">أفلت صورتك هنا أو انقر للتصفح. الصيغ المدعومة: JPG, PNG, WEBP.</p>
+          <h3 className={`text-xl font-medium mb-2 font-serif transition-colors pointer-events-none ${isDragging ? 'text-yellow-400' : 'text-white'}`}>
+             {isDragging ? 'أفلت الصورة هنا' : 'رفع صورة المنتج'}
+          </h3>
+          <p className={`text-zinc-500 text-center max-w-xs pointer-events-none transition-colors ${isDragging ? 'text-zinc-400' : ''}`}>
+            أفلت صورتك هنا أو انقر للتصفح. الصيغ المدعومة: JPG, PNG, WEBP.
+          </p>
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -70,9 +105,14 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
 
       <div className="relative max-w-full max-h-full shadow-2xl shadow-black rounded-lg overflow-hidden ring-1 ring-white/10">
         <img 
+          key={imageState.current} // Triggers animation when image content updates
           src={isComparing && imageState.original ? imageState.original : imageState.current!} 
           alt="Studio content" 
-          className={`max-w-full max-h-[85vh] object-contain transition-opacity duration-300 ${isProcessing ? 'opacity-50 blur-sm' : 'opacity-100'}`}
+          className={`max-w-full max-h-[85vh] object-contain transition-all duration-300 ${
+            isProcessing 
+              ? 'opacity-50 blur-sm scale-[0.98]' 
+              : 'opacity-100 animate-reveal'
+          }`}
         />
         
         {/* Processing Overlay */}
